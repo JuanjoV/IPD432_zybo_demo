@@ -1,0 +1,9 @@
+.directory
+*.kdev4
+*.dtb
+*.dtbo
+build/
+doc/
+.vscode/
+*.kate-swp
+*.log
