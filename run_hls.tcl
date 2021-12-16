@@ -16,9 +16,9 @@ set_part {xc7z010-clg400-1}
 # Create reference clock
 create_clock -period 10 -name default
 # Export configuration
-config_export -description {Demo IP} -display_name AdderTree -format ip_catalog -output D:/Users/juanj/U/IPD432/Demo_zybo_hls/hls_example_function.zip -rtl verilog -version 0.2
+config_export -description {Demo IP} -display_name AdderTree -format ip_catalog -output Demo_zybo_hls/hls_example_function.zip -rtl verilog -version 0.2
 # Add HLS directives from tcl
-#source "./Demo_zynq_hls/solution1/directives.tcl"
+#source "./Demo_zybo_hls/solution1/directives.tcl"
 # Run C simulation
 #csim_design
 # Run synthesis
@@ -26,5 +26,5 @@ config_export -description {Demo IP} -display_name AdderTree -format ip_catalog 
 # Run cosimulation
 #cosim_design
 # Export IP
-#export_design -rtl verilog -format ip_catalog -description "Demo IP" -version "0.2" -display_name "AdderTree" -output D:/Users/juanj/U/IPD432/Demo_zynq_hls/hls_example_function.zip
+#export_design -rtl verilog -format ip_catalog -description "Demo IP" -version "0.2" -display_name "AdderTree" -output Demo_zybo_hls/hls_example_function.zip
 exit

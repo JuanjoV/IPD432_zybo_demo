@@ -7,3 +7,5 @@ doc/
 .vscode/
 *.kate-swp
 *.log
+*.app
+solution*/
