@@ -38,7 +38,7 @@ int main(void)
 		fscanf(fdata, "%f\n", &buffer[0]);
 		fscanf(fdata, "%f\n", &buffer[1]);
 		/* Call hls function */
-		hls_example_function(&output[0], &output[1], x);
+		hls_example(&output[0], &output[1], x);
 
 		/* Compute error */
 		add_rel_err = 0;

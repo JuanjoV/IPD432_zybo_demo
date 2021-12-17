@@ -9,6 +9,6 @@
 /* Data type */
 typedef float data_t;
 
-void hls_example_function(data_t *y_add, data_t *y_mean, data_t x[N]);
+void hls_example(data_t *y_add, data_t *y_mean, data_t x[N]);
 
 #endif

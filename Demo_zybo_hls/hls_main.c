@@ -1,7 +1,7 @@
 
 #include "hls_config.h"
 
-void hls_example_function(data_t *y_add, data_t *y_mean, data_t x[N])
+void hls_example(data_t *y_add, data_t *y_mean, data_t x[N])
 {
 #pragma HLS INTERFACE mode=s_axilite port=x storage_impl=bram
 #pragma HLS INTERFACE mode=s_axilite port=y_add
@@ -13,7 +13,6 @@ void hls_example_function(data_t *y_add, data_t *y_mean, data_t x[N])
 
 	MainLoop: for (int i = 0; i < N; ++i)
 	{
-//#pragma HLS PIPELINE II=41
 #pragma HLS UNROLL
 		res = res + x[i];
 	}
