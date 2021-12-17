@@ -54,9 +54,9 @@ class zynqTest():
 
 
 if __name__ == "__main__":
-	zynqDev = zynqTest('COM8', 115200, 128, 1000)
+	zynqDev = zynqTest('COM8', 115200, 128, 10)
 	print("Listening...")
-	zynqDev.readGoldenRef("D:\\Users\\juanj\\U\\IPD432\\Demo_zynq_hls\\goldenReference.dat")
+	zynqDev.readGoldenRef("..\\Demo_zybo_hls\\goldenReference.dat")
 	res = zynqDev.runTest()
 	if res:
 		print(50 * "*")

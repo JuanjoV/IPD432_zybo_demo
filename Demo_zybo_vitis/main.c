@@ -4,21 +4,21 @@
 #include <xscugic.h>
 #include <xgpio.h>
 #include <xil_exception.h>
-#include "xhls_example_function.h"
+#include "xhls_example.h"
 //#include <xil_printf.h>
 
-#include "aux_input.h"
 
 #define INTC_DEVICE_ID			XPAR_PS7_SCUGIC_0_DEVICE_ID
+#define EXTP_DEVICE_ID			XPAR_AXI_GPIO_0_DEVICE_ID
 #define LEDS_DEVICE_ID 			XPAR_GPIO_LEDS_DEVICE_ID
 #define BTNS_DEVICE_ID 			XPAR_GPIO_BTNS_DEVICE_ID
-#define XHLS_DEVICE_ID			XPAR_ADDERTREE_DEVICE_ID
+#define XHLS_DEVICE_ID			XPAR_HLS_EXAMPLE_0_DEVICE_ID
 #define INTC_GPIO_INT_ID 		XPAR_FABRIC_GPIO_BTNS_IP2INTC_IRPT_INTR
-#define INTC_ADDT_INT_ID		XPAR_FABRIC_ADDERTREE_INTERRUPT_INTR
+#define INTC_ADDT_INT_ID		XPAR_FABRIC_HLS_EXAMPLE_0_INTERRUPT_INTR
 #define xil_printf 				printf
 #define BTN_INT					XGPIO_IR_CH1_MASK
 
-#define N_VECTORS				1000
+#define N_VECTORS				10
 #define VECTOR_SIZE				128
 #define BUFFER_SIZE				16
 #define BRAMS					8
@@ -39,29 +39,29 @@ enum IP_ready
 int IntcInitFunction(u16 DeviceId, XGpio *GpioIns);
 int errorHandler(enum errTypes err);
 void BTN_InterruptHandler(void *InsPtr);
-int TxDataSend(XHls_example_function *InstancePtr, float data[VECTOR_SIZE]);
+int TxDataSend(XHls_example *InstancePtr, float data[VECTOR_SIZE]);
 void AdderTreeReceiveHandler(void *InstPtr);
 
 
-XGpio leds, btns;
+XGpio leds, btns, extp;
 XScuGic intc;
-XHls_example_function hls_ip;
+XHls_example hls_ip;
 static int led_data;
 static int btn_value;
 volatile int ip_status;
 
-void (*XHLSWriteFunc[])() = {	XHls_example_function_Write_x_0_Words,
-						XHls_example_function_Write_x_1_Words,
-						XHls_example_function_Write_x_2_Words,
-						XHls_example_function_Write_x_3_Words,
-						XHls_example_function_Write_x_4_Words,
-						XHls_example_function_Write_x_5_Words,
-						XHls_example_function_Write_x_6_Words,
-						XHls_example_function_Write_x_7_Words};
+void (*XHLSWriteFunc[])() = {	XHls_example_Write_x_0_Words,
+						XHls_example_Write_x_1_Words,
+						XHls_example_Write_x_2_Words,
+						XHls_example_Write_x_3_Words,
+						XHls_example_Write_x_4_Words,
+						XHls_example_Write_x_5_Words,
+						XHls_example_Write_x_6_Words,
+						XHls_example_Write_x_7_Words};
 u32 TxData[BUFFER_SIZE];
 u32 RxData[2];
 
-int TxDataSend(XHls_example_function *InstancePtr, float data[VECTOR_SIZE])
+int TxDataSend(XHls_example *InstancePtr, float data[VECTOR_SIZE])
 {
 	int status = XST_SUCCESS;
 	for (int br = 0; br < BRAMS; br++)
@@ -78,17 +78,18 @@ int TxDataSend(XHls_example_function *InstancePtr, float data[VECTOR_SIZE])
 void AdderTreeReceiveHandler(void *InstPtr)
 {
 	float results[2];
-	XHls_example_function_InterruptDisable(&hls_ip,1);
+	XHls_example_InterruptDisable(&hls_ip,1);
 
-	RxData[0] = XHls_example_function_Get_y_add(&hls_ip);
-	RxData[1] = XHls_example_function_Get_y_mean(&hls_ip);
+	XGpio_DiscreteWrite(&extp, 1, 0x00);
+	RxData[0] = XHls_example_Get_y_add(&hls_ip);
+	RxData[1] = XHls_example_Get_y_mean(&hls_ip);
 	results[0] = *((float*) &(RxData[0]));
 	results[1] = *((float*) &(RxData[1]));
 
 	xil_printf("Resultados: %.3f ;  %.3f\n", results[0], results[1]);
 	ip_status = IP_Ready;
-	XHls_example_function_InterruptClear(&hls_ip,1);
-	XHls_example_function_InterruptEnable(&hls_ip,1);
+	XHls_example_InterruptClear(&hls_ip,1);
+	XHls_example_InterruptEnable(&hls_ip,1);
 }
 
 void getVector(float vec[VECTOR_SIZE])
@@ -106,15 +107,17 @@ int main()
 
 	/* INIT */
 	/* HLS IP init */
-	status += XHls_example_function_Initialize(&hls_ip, XHLS_DEVICE_ID);
+	status += XHls_example_Initialize(&hls_ip, XHLS_DEVICE_ID);
 	if (status != XST_SUCCESS) return errorHandler(ERR_HLS_INIT);
 
 	/* gpio init */
 	status += XGpio_Initialize(&leds, LEDS_DEVICE_ID);
 	status += XGpio_Initialize(&btns, BTNS_DEVICE_ID);
+	status += XGpio_Initialize(&extp, EXTP_DEVICE_ID);
 	if (status != XST_SUCCESS) return errorHandler(ERR_GPIO_INIT);
 
 	XGpio_SetDataDirection(&leds, 1, 0x00);
+	XGpio_SetDataDirection(&extp, 1, 0x00);
 	XGpio_SetDataDirection(&btns, 1, 0xff);
 
 	/* interrupt controller init*/
@@ -122,6 +125,7 @@ int main()
 	if (status != XST_SUCCESS) return errorHandler(ERR_INTC_INIT);
 
 	ip_status = IP_Ready;
+	XGpio_DiscreteWrite(&extp, 1, 0x00);
 	/*
 	 * Expected : -14766, -115.359
 	 */
@@ -134,7 +138,8 @@ int main()
 		XGpio_DiscreteWrite(&leds, 1, 0x00);
 		TxDataSend(&hls_ip, txbuffer);
 		ip_status = IP_Busy;
-		XHls_example_function_Start(&hls_ip);
+		XHls_example_Start(&hls_ip);
+		XGpio_DiscreteWrite(&extp, 1, 0xff);
 	}
 
 	while(1);
@@ -223,8 +228,8 @@ int IntcInitFunction(u16 DeviceId, XGpio *GpioIns)
 	// Enable GPIO interrupts interrupt
 	XGpio_InterruptEnable(GpioIns, 1);
 	XGpio_InterruptGlobalEnable(GpioIns);
-	XHls_example_function_InterruptEnable(&hls_ip, 1);
-	XHls_example_function_InterruptGlobalEnable(&hls_ip);
+	XHls_example_InterruptEnable(&hls_ip, 1);
+	XHls_example_InterruptGlobalEnable(&hls_ip);
 
 	// Enable GPIO and timer interrupts in the controller
 	XScuGic_Enable(&intc, INTC_GPIO_INT_ID);
